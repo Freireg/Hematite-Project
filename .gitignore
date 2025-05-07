@@ -1,6 +1,7 @@
 # Prerequisites
 *.d
 .metadata
+.settings
 # Object files
 *.o
 *.ko

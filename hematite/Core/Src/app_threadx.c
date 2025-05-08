@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include "st7789.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,26 +102,48 @@ void MX_ThreadX_Init(void)
 
 /* USER CODE BEGIN 1 */
 VOID displayThreadEntry(ULONG *initial_input) {
-	char text1[] = "Default Text 1";
-	char text2[] = "Default Text 2";
+//	char text1[] = "Default Text 1";
+//	char text2[] = "Default Text 2";
+	char tempBuff[5] = {0};
 	uint8_t i = 1;
 
 	ST7789_Init();
 	while(1) {
-		ST7789_Fill_Color(DARKBLUE);
-		ST7789_WriteString(10, 16, "ThreadX Example", Font_16x26, WHITE, DARKBLUE);
-		tx_thread_sleep(200);
+//		ST7789_Fill_Color(DARKBLUE);
+		ST7789_DrawFilledRectangle(0, 0, 155, 115, GRAYBLUE);
+		ST7789_WriteString(10, 10, "Thread 1 Monitor", Font_7x10, WHITE, GRAYBLUE);
+		ST7789_WriteString(10, 25, "ID: ", Font_7x10, WHITE, GRAYBLUE);
+		ST7789_WriteString(30, 25, "DisplayManager", Font_7x10, WHITE, GRAYBLUE);
+		ST7789_WriteString(10, 50, "Status: ", Font_7x10, WHITE, GRAYBLUE);
 
-		while(i < 6) {
-			ST7789_WriteString(10, (16 + (i*30)), text1, Font_16x26, WHITE, DARKBLUE);
-			tx_thread_sleep(300);
-			ST7789_WriteString(10, (16 + (i*30)), text2, Font_16x26, WHITE, DARKBLUE);
-			tx_thread_sleep(300);
 
+		ST7789_DrawFilledRectangle(0, 120, 155, 120, LIGHTBLUE);
+		ST7789_WriteString(10, 130, "Thread 2 Monitor", Font_7x10, WHITE, LIGHTBLUE);
+		ST7789_WriteString(10, 145, "ID: ", Font_7x10, WHITE, LIGHTBLUE);
+		ST7789_WriteString(30, 145, "Blinky", Font_7x10, WHITE, LIGHTBLUE);
+		ST7789_WriteString(10, 170, "Information...", Font_7x10, WHITE, LIGHTBLUE);
+
+
+		ST7789_DrawFilledRectangle(160, 0, 160, 115, LGRAY);
+		ST7789_WriteString(170, 10, "Thread 3 Monitor", Font_7x10, WHITE, LGRAY);
+		ST7789_WriteString(170, 25, "ID: ", Font_7x10, WHITE, LGRAY);
+		ST7789_WriteString(200, 25, "USBX", Font_7x10, WHITE, LGRAY);
+		ST7789_WriteString(170, 50, "Information...", Font_7x10, WHITE, LGRAY);
+
+		ST7789_DrawFilledRectangle(160, 120, 160, 120, LBBLUE);
+		ST7789_WriteString(170, 130, "Thread 4 Monitor", Font_7x10, WHITE, LBBLUE);
+		ST7789_WriteString(170, 145, "ID: ", Font_7x10, WHITE, LBBLUE);
+		ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
+		ST7789_WriteString(170, 170, "Information...", Font_7x10, WHITE, LBBLUE);
+
+		while(1) {
+			sprintf(tempBuff, "%d", i);
+			ST7789_WriteString(60, 50, tempBuff, Font_7x10, WHITE, GRAYBLUE);
+			tx_thread_sleep(300);
 			i++;
 		}
 		i = 1;
-		ST7789_WriteString(10, 196, "End of Example", Font_16x26, WHITE, DARKBLUE);
+		ST7789_Fill_Color(BLACK);
 		tx_thread_sleep(200);
 	}
 }

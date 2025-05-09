@@ -30,12 +30,38 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef enum {
+	DISPLAY_THREAD_ID,
+	BLINKY_THREAD_ID,
+	USB_THREAD_ID,
+	FS_THREAD_ID
+}threadEnum_t;
+
+typedef enum {
+	RUNNING,
+	HALTED,
+	FINISHED
+} threadStatus_t;
+
+typedef struct {
+	threadEnum_t thread_id;
+	threadStatus_t thread_status;
+	ULONG time;
+	uint8_t data;
+}hematiteQueueData_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BYTE_POOL_SIZE 9120
+
 #define DISPLAY_THREAD_STACK_SIZE 1024
+#define BLINKY_THREAD_STACK_SIZE 512
+
+#define MESSAGE_SIZE	sizeof(hematiteQueueData_t)
+#define NUMBER_OF_MESSAGES	5
+#define QUEUE_SIZE MESSAGE_SIZE * NUMBER_OF_MESSAGES
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,13 +71,22 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+TX_BYTE_POOL bytePool;
+
 uint8_t display_thread_stack[DISPLAY_THREAD_STACK_SIZE];
 TX_THREAD display_thread_ptr;
+
+uint8_t blinky_thread_stack[BLINKY_THREAD_STACK_SIZE];
+TX_THREAD blinky_thread_ptr;
+
+TX_QUEUE system_queue;
+CHAR* system_queue_ptr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 VOID displayThreadEntry(ULONG *initial_input);
+VOID blinkyThreadEntry(ULONG *param);
 /* USER CODE END PFP */
 
 /**
@@ -63,7 +98,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 {
   UINT ret = TX_SUCCESS;
   /* USER CODE BEGIN App_ThreadX_MEM_POOL */
-
+  tx_byte_pool_create(&bytePool, "System_Byte_Pool", memory_ptr, BYTE_POOL_SIZE);
   /* USER CODE END App_ThreadX_MEM_POOL */
   /* USER CODE BEGIN App_ThreadX_Init */
   tx_thread_create(&display_thread_ptr,
@@ -76,6 +111,27 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 				  15,
 				  1,
 				  TX_AUTO_START
+		  );
+
+  tx_thread_create(&blinky_thread_ptr,
+		  	  	  "Blinky_Thread",
+				  blinkyThreadEntry,
+				  0x1234,
+				  blinky_thread_stack,
+				  BLINKY_THREAD_STACK_SIZE,
+				  15,
+				  15,
+				  1,
+				  TX_AUTO_START
+		  );
+
+  tx_byte_allocate(&bytePool, (VOID**)&system_queue_ptr, QUEUE_SIZE, TX_NO_WAIT);
+
+  tx_queue_create(&system_queue,
+		  	  	  "System_Queue",
+				  MESSAGE_SIZE,
+				  system_queue_ptr,
+				  QUEUE_SIZE
 		  );
   /* USER CODE END App_ThreadX_Init */
 
@@ -103,10 +159,13 @@ void MX_ThreadX_Init(void)
 /* USER CODE BEGIN 1 */
 VOID displayThreadEntry(ULONG *initial_input) {
 	char tempBuff[10] = {0};
+	char blinkyBuff[10] = {0};
 	uint8_t i = 1;
 	ULONG currentTime = 0;
 	ULONG elapsedTime = 0;
 	float secondsTime = 0.0;
+	hematiteQueueData_t qData;
+
 
 	currentTime = tx_time_get();
 
@@ -126,7 +185,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(10, 145, "ID: ", Font_7x10, WHITE, LIGHTBLUE);
 	ST7789_WriteString(30, 145, "Blinky", Font_7x10, WHITE, LIGHTBLUE);
 	ST7789_WriteString(10, 160, "Init Time: ", Font_7x10, WHITE, LIGHTBLUE);
-	ST7789_WriteString(10, 185, "Information...", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 185, "Status: ", Font_7x10, WHITE, LIGHTBLUE);
 
 	/* Draw the third quadrant background */
 	ST7789_DrawFilledRectangle(160, 0, 160, 115, LGRAY);
@@ -149,14 +208,53 @@ VOID displayThreadEntry(ULONG *initial_input) {
 
 	sprintf(tempBuff, "%.2f s", secondsTime);
 	ST7789_WriteString(80, 40, tempBuff, Font_7x10, WHITE, GRAYBLUE);
+
 	while(1) {
-		sprintf(tempBuff, "%03d", i);
-		ST7789_WriteString(60, 65, tempBuff, Font_7x10, WHITE, GRAYBLUE);
-		tx_thread_sleep(300);
-		i++;
+		ST7789_WriteString(60, 65, "Running", Font_7x10, WHITE, GRAYBLUE);
+
+		/* Check for new queue messages */
+		if(tx_queue_receive(&system_queue,&qData, 10) == TX_SUCCESS) {
+			switch (qData.thread_id) {
+				case BLINKY_THREAD_ID:
+
+					/* Display the data sent from the blinky thread */
+					sprintf(blinkyBuff, "%03d", qData.data);
+					ST7789_WriteString(60, 185, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
+
+					break;
+				default:
+					break;
+			}
+		}
 	}
-	i = 1;
-	ST7789_Fill_Color(BLACK);
-	tx_thread_sleep(200);
+
+}
+
+VOID blinkyThreadEntry(ULONG *param) {
+	uint8_t counter = 0;
+	ULONG elapsedTime = 0, currentTime = 0;
+	hematiteQueueData_t qData = {0};
+
+	/* Set the message ID */
+	qData.thread_id = BLINKY_THREAD_ID;
+
+	while(1) {
+
+		currentTime = tx_time_get();
+		/* Toggle IO */
+		HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+
+		elapsedTime = tx_time_get() - currentTime;
+
+		qData.time = elapsedTime;
+		qData.data = counter;
+		/* Send the queue data to the system queue */
+		tx_queue_send(&system_queue, &qData, TX_WAIT_FOREVER);
+
+		counter++;
+		/* Increasing sleep time for the fun of it */
+		tx_thread_sleep(counter * 2);
+
+	}
 }
 /* USER CODE END 1 */

@@ -102,49 +102,61 @@ void MX_ThreadX_Init(void)
 
 /* USER CODE BEGIN 1 */
 VOID displayThreadEntry(ULONG *initial_input) {
-//	char text1[] = "Default Text 1";
-//	char text2[] = "Default Text 2";
-	char tempBuff[5] = {0};
+	char tempBuff[10] = {0};
 	uint8_t i = 1;
+	ULONG currentTime = 0;
+	ULONG elapsedTime = 0;
+	float secondsTime = 0.0;
+
+	currentTime = tx_time_get();
 
 	ST7789_Init();
+
+	/* Draw the first quadrant background */
+	ST7789_DrawFilledRectangle(0, 0, 155, 115, GRAYBLUE);
+	ST7789_WriteString(10, 10, "Thread 1 Monitor", Font_7x10, WHITE, GRAYBLUE);
+	ST7789_WriteString(10, 25, "ID: ", Font_7x10, WHITE, GRAYBLUE);
+	ST7789_WriteString(30, 25, "DisplayManager", Font_7x10, WHITE, GRAYBLUE);
+	ST7789_WriteString(10, 40, "Init Time: ", Font_7x10, WHITE, GRAYBLUE);
+	ST7789_WriteString(10, 65, "Status: ", Font_7x10, WHITE, GRAYBLUE);
+
+	/* Draw the second quadrant background */
+	ST7789_DrawFilledRectangle(0, 120, 155, 120, LIGHTBLUE);
+	ST7789_WriteString(10, 130, "Thread 2 Monitor", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 145, "ID: ", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(30, 145, "Blinky", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 160, "Init Time: ", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 185, "Information...", Font_7x10, WHITE, LIGHTBLUE);
+
+	/* Draw the third quadrant background */
+	ST7789_DrawFilledRectangle(160, 0, 160, 115, LGRAY);
+	ST7789_WriteString(170, 10, "Thread 3 Monitor", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 25, "ID: ", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(200, 25, "USBX", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 40, "Init Time: ", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 65, "Information...", Font_7x10, WHITE, LGRAY);
+
+	/* Draw the forth quadrant background */
+	ST7789_DrawFilledRectangle(160, 120, 160, 120, LBBLUE);
+	ST7789_WriteString(170, 130, "Thread 4 Monitor", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 145, "ID: ", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 160, "Init Time: ", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 185, "Information...", Font_7x10, WHITE, LBBLUE);
+
+	elapsedTime = tx_time_get() - currentTime;
+	secondsTime = elapsedTime / 100;
+
+	sprintf(tempBuff, "%.2f s", secondsTime);
+	ST7789_WriteString(80, 40, tempBuff, Font_7x10, WHITE, GRAYBLUE);
 	while(1) {
-//		ST7789_Fill_Color(DARKBLUE);
-		ST7789_DrawFilledRectangle(0, 0, 155, 115, GRAYBLUE);
-		ST7789_WriteString(10, 10, "Thread 1 Monitor", Font_7x10, WHITE, GRAYBLUE);
-		ST7789_WriteString(10, 25, "ID: ", Font_7x10, WHITE, GRAYBLUE);
-		ST7789_WriteString(30, 25, "DisplayManager", Font_7x10, WHITE, GRAYBLUE);
-		ST7789_WriteString(10, 50, "Status: ", Font_7x10, WHITE, GRAYBLUE);
-
-
-		ST7789_DrawFilledRectangle(0, 120, 155, 120, LIGHTBLUE);
-		ST7789_WriteString(10, 130, "Thread 2 Monitor", Font_7x10, WHITE, LIGHTBLUE);
-		ST7789_WriteString(10, 145, "ID: ", Font_7x10, WHITE, LIGHTBLUE);
-		ST7789_WriteString(30, 145, "Blinky", Font_7x10, WHITE, LIGHTBLUE);
-		ST7789_WriteString(10, 170, "Information...", Font_7x10, WHITE, LIGHTBLUE);
-
-
-		ST7789_DrawFilledRectangle(160, 0, 160, 115, LGRAY);
-		ST7789_WriteString(170, 10, "Thread 3 Monitor", Font_7x10, WHITE, LGRAY);
-		ST7789_WriteString(170, 25, "ID: ", Font_7x10, WHITE, LGRAY);
-		ST7789_WriteString(200, 25, "USBX", Font_7x10, WHITE, LGRAY);
-		ST7789_WriteString(170, 50, "Information...", Font_7x10, WHITE, LGRAY);
-
-		ST7789_DrawFilledRectangle(160, 120, 160, 120, LBBLUE);
-		ST7789_WriteString(170, 130, "Thread 4 Monitor", Font_7x10, WHITE, LBBLUE);
-		ST7789_WriteString(170, 145, "ID: ", Font_7x10, WHITE, LBBLUE);
-		ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
-		ST7789_WriteString(170, 170, "Information...", Font_7x10, WHITE, LBBLUE);
-
-		while(1) {
-			sprintf(tempBuff, "%d", i);
-			ST7789_WriteString(60, 50, tempBuff, Font_7x10, WHITE, GRAYBLUE);
-			tx_thread_sleep(300);
-			i++;
-		}
-		i = 1;
-		ST7789_Fill_Color(BLACK);
-		tx_thread_sleep(200);
+		sprintf(tempBuff, "%03d", i);
+		ST7789_WriteString(60, 65, tempBuff, Font_7x10, WHITE, GRAYBLUE);
+		tx_thread_sleep(300);
+		i++;
 	}
+	i = 1;
+	ST7789_Fill_Color(BLACK);
+	tx_thread_sleep(200);
 }
 /* USER CODE END 1 */

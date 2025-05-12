@@ -178,6 +178,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(30, 25, "DisplayManager", Font_7x10, WHITE, GRAYBLUE);
 	ST7789_WriteString(10, 40, "Init Time: ", Font_7x10, WHITE, GRAYBLUE);
 	ST7789_WriteString(10, 65, "Status: ", Font_7x10, WHITE, GRAYBLUE);
+	ST7789_WriteString(10, 80, "Uptime: ", Font_7x10, WHITE, GRAYBLUE);
 
 	/* Draw the second quadrant background */
 	ST7789_DrawFilledRectangle(0, 120, 155, 120, LIGHTBLUE);
@@ -204,13 +205,18 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(170, 185, "Information...", Font_7x10, WHITE, LBBLUE);
 
 	elapsedTime = tx_time_get() - currentTime;
-	secondsTime = elapsedTime / 100;
+	secondsTime = elapsedTime / 100.0;
 
 	sprintf(tempBuff, "%.2f s", secondsTime);
 	ST7789_WriteString(80, 40, tempBuff, Font_7x10, WHITE, GRAYBLUE);
 
 	while(1) {
 		ST7789_WriteString(60, 65, "Running", Font_7x10, WHITE, GRAYBLUE);
+		currentTime = tx_time_get();
+		secondsTime = currentTime / 100.0;
+
+		sprintf(tempBuff, "%.2f", secondsTime);
+		ST7789_WriteString(75, 80, tempBuff, Font_7x10, WHITE, GRAYBLUE);
 
 		/* Check for new queue messages */
 		if(tx_queue_receive(&system_queue,&qData, 10) == TX_SUCCESS) {

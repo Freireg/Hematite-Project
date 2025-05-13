@@ -165,7 +165,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	uint8_t i = 1;
 	ULONG currentTime = 0;
 	ULONG elapsedTime = 0;
-	float secondsTime = 0.0;
+	float secondsTime = 0.0, uptimeBlinky = 0.0;
 	hematiteQueueData_t qData;
 
 
@@ -189,6 +189,8 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(30, 145, "Blinky", Font_7x10, WHITE, LIGHTBLUE);
 	ST7789_WriteString(10, 160, "Init Time: ", Font_7x10, WHITE, LIGHTBLUE);
 	ST7789_WriteString(10, 185, "Status: ", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 200, "Uptime: ", Font_7x10, WHITE, LIGHTBLUE);
+	ST7789_WriteString(10, 215, "Data: ", Font_7x10, WHITE, LIGHTBLUE);
 
 	/* Draw the third quadrant background */
 	ST7789_DrawFilledRectangle(160, 0, 160, 115, LGRAY);
@@ -196,7 +198,9 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(170, 25, "ID: ", Font_7x10, WHITE, LGRAY);
 	ST7789_WriteString(200, 25, "USBX", Font_7x10, WHITE, LGRAY);
 	ST7789_WriteString(170, 40, "Init Time: ", Font_7x10, WHITE, LGRAY);
-	ST7789_WriteString(170, 65, "Information...", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 65, "Status: ", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 80, "Uptime: ", Font_7x10, WHITE, LGRAY);
+	ST7789_WriteString(170, 95, "Data: ", Font_7x10, WHITE, LGRAY);
 
 	/* Draw the forth quadrant background */
 	ST7789_DrawFilledRectangle(160, 120, 160, 120, LBBLUE);
@@ -204,7 +208,9 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(170, 145, "ID: ", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 160, "Init Time: ", Font_7x10, WHITE, LBBLUE);
-	ST7789_WriteString(170, 185, "Information...", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 185, "Status: ", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 200, "Uptime: ", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 215, "Data: ", Font_7x10, WHITE, LBBLUE);
 
 	elapsedTime = tx_time_get() - currentTime;
 	secondsTime = elapsedTime / 100.0;
@@ -224,10 +230,19 @@ VOID displayThreadEntry(ULONG *initial_input) {
 		if(tx_queue_receive(&system_queue,&qData, 10) == TX_SUCCESS) {
 			switch (qData.thread_id) {
 				case BLINKY_THREAD_ID:
-
+					/* Update thread status */
+					if(qData.thread_status != RUNNING) {
+						ST7789_WriteString(60, 185, "Halted", Font_7x10, WHITE, LIGHTBLUE);
+					} else {
+						ST7789_WriteString(60, 185, "Running", Font_7x10, WHITE, LIGHTBLUE);
+						/* Display thread uptime */
+						uptimeBlinky = qData.time / 100.0;
+						sprintf(blinkyBuff, "%.2f", uptimeBlinky);
+						ST7789_WriteString(75, 200, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
+					}
 					/* Display the data sent from the blinky thread */
 					sprintf(blinkyBuff, "%03d", qData.data);
-					ST7789_WriteString(60, 185, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
+					ST7789_WriteString(60, 215, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
 
 					break;
 				default:
@@ -243,12 +258,13 @@ VOID blinkyThreadEntry(ULONG *param) {
 	ULONG elapsedTime = 0, currentTime = 0;
 	hematiteQueueData_t qData = {0};
 
+	currentTime = tx_time_get();
+
 	/* Set the message ID */
 	qData.thread_id = BLINKY_THREAD_ID;
+	qData.thread_status = RUNNING;
 
 	while(1) {
-
-		currentTime = tx_time_get();
 		/* Toggle IO */
 		HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
 

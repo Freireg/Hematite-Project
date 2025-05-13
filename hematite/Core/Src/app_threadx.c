@@ -26,6 +26,7 @@
 #include "main.h"
 #include "st7789.h"
 #include "stdio.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +50,6 @@ typedef struct {
 	ULONG time;
 	uint8_t data;
 }hematiteQueueData_t;
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -81,6 +81,8 @@ TX_THREAD blinky_thread_ptr;
 
 TX_QUEUE system_queue;
 CHAR* system_queue_ptr;
+
+extern TX_SEMAPHORE semaphore;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -256,6 +258,8 @@ VOID blinkyThreadEntry(ULONG *param) {
 		qData.data = counter;
 		/* Send the queue data to the system queue */
 		tx_queue_send(&system_queue, &qData, TX_WAIT_FOREVER);
+
+		tx_semaphore_put(&semaphore);
 
 		counter++;
 		/* Increasing sleep time for the fun of it */

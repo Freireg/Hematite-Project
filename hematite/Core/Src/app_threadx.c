@@ -24,32 +24,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
-#include "st7789.h"
-#include "stdio.h"
-#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum {
-	DISPLAY_THREAD_ID,
-	BLINKY_THREAD_ID,
-	USB_THREAD_ID,
-	FS_THREAD_ID
-}threadEnum_t;
 
-typedef enum {
-	RUNNING,
-	HALTED,
-	FINISHED
-} threadStatus_t;
-
-typedef struct {
-	threadEnum_t thread_id;
-	threadStatus_t thread_status;
-	ULONG time;
-	uint8_t data;
-}hematiteQueueData_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -162,7 +141,8 @@ void MX_ThreadX_Init(void)
 VOID displayThreadEntry(ULONG *initial_input) {
 	char tempBuff[10] = {0};
 	char blinkyBuff[10] = {0};
-	uint8_t i = 1;
+//	char filexBuff[10] = {0};
+//	uint8_t i = 1;
 	ULONG currentTime = 0;
 	ULONG elapsedTime = 0;
 	float secondsTime = 0.0;
@@ -204,7 +184,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(170, 145, "ID: ", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 160, "Init Time: ", Font_7x10, WHITE, LBBLUE);
-	ST7789_WriteString(170, 185, "Information...", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(170, 185, "Status: ", Font_7x10, WHITE, LBBLUE);
 
 	elapsedTime = tx_time_get() - currentTime;
 	secondsTime = elapsedTime / 100.0;
@@ -229,6 +209,11 @@ VOID displayThreadEntry(ULONG *initial_input) {
 					sprintf(blinkyBuff, "%03d", qData.data);
 					ST7789_WriteString(60, 185, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
 
+					break;
+				case FS_THREAD_ID:
+					if(qData.thread_status == HALTED) {
+						ST7789_WriteString(220, 185, "Halted", Font_7x10, WHITE, LBBLUE);
+					}
 					break;
 				default:
 					break;

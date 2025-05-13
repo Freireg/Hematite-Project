@@ -30,17 +30,38 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "st7789.h"
+#include "stdio.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef enum {
+	DISPLAY_THREAD_ID,
+	BLINKY_THREAD_ID,
+	USB_THREAD_ID,
+	FS_THREAD_ID
+}threadEnum_t;
 
+typedef enum {
+	RUNNING,
+	HALTED,
+	FINISHED
+} threadStatus_t;
+
+typedef struct {
+	threadEnum_t thread_id;
+	threadStatus_t thread_status;
+	ULONG time;
+	uint8_t data;
+}hematiteQueueData_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern TX_QUEUE system_queue;
+extern CHAR* system_queue_ptr;
 /* USER CODE END EC */
 
 /* Private defines -----------------------------------------------------------*/

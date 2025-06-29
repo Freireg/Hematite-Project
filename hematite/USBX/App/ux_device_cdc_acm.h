@@ -41,7 +41,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern TX_QUEUE system_queue;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

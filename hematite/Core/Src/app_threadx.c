@@ -31,25 +31,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum {
-	DISPLAY_THREAD_ID,
-	BLINKY_THREAD_ID,
-	USB_THREAD_ID,
-	FS_THREAD_ID
-}threadEnum_t;
 
-typedef enum {
-	RUNNING,
-	HALTED,
-	FINISHED
-} threadStatus_t;
-
-typedef struct {
-	threadEnum_t thread_id;
-	threadStatus_t thread_status;
-	ULONG time;
-	uint8_t data;
-}hematiteQueueData_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -162,10 +144,11 @@ void MX_ThreadX_Init(void)
 VOID displayThreadEntry(ULONG *initial_input) {
 	char tempBuff[10] = {0};
 	char blinkyBuff[10] = {0};
+	char usbxBuff[10] = {0};
 	uint8_t i = 1;
 	ULONG currentTime = 0;
 	ULONG elapsedTime = 0;
-	float secondsTime = 0.0, uptimeBlinky = 0.0;
+	float secondsTime = 0.0, uptimeBlinky = 0.0, uptimeUSBX = 0.0;
 	hematiteQueueData_t qData;
 
 
@@ -209,6 +192,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 	ST7789_WriteString(200, 145, "FileX", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 160, "Init Time: ", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 185, "Status: ", Font_7x10, WHITE, LBBLUE);
+	ST7789_WriteString(220, 185, "Halted", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 200, "Uptime: ", Font_7x10, WHITE, LBBLUE);
 	ST7789_WriteString(170, 215, "Data: ", Font_7x10, WHITE, LBBLUE);
 
@@ -230,7 +214,7 @@ VOID displayThreadEntry(ULONG *initial_input) {
 		if(tx_queue_receive(&system_queue,&qData, 10) == TX_SUCCESS) {
 			switch (qData.thread_id) {
 				case BLINKY_THREAD_ID:
-					/* Update thread status */
+					/* Update Blinky thread status */
 					if(qData.thread_status != RUNNING) {
 						ST7789_WriteString(60, 185, "Halted", Font_7x10, WHITE, LIGHTBLUE);
 					} else {
@@ -244,6 +228,21 @@ VOID displayThreadEntry(ULONG *initial_input) {
 					sprintf(blinkyBuff, "%03d", qData.data);
 					ST7789_WriteString(60, 215, blinkyBuff, Font_7x10, WHITE, LIGHTBLUE);
 
+					break;
+				case USB_THREAD_ID:
+					/* Update USB thread status*/
+					if(qData.thread_status != RUNNING) {
+						ST7789_WriteString(220, 65, "Halted", Font_7x10, WHITE, LGRAY);
+					} else {
+						ST7789_WriteString(220, 65, "Running", Font_7x10, WHITE, LGRAY);
+						/* Display thread uptime */
+						uptimeUSBX = qData.time / 100.0;
+						sprintf(usbxBuff, "%.2f", uptimeUSBX);
+						ST7789_WriteString(235, 80, usbxBuff, Font_7x10, WHITE, LGRAY);
+					}
+					/* Display the data sent from the usbx thread */
+					sprintf(usbxBuff, "%05d", qData.data);
+					ST7789_WriteString(235, 95, usbxBuff, Font_7x10, WHITE, LGRAY);
 					break;
 				default:
 					break;

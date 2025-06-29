@@ -1,6 +1,10 @@
 # Hematite-Project
-## Overview
+<!-- ## Overview -->
 This is a small ThreadX exercise. The application will run threads to do multiple interfaces and use some of the ThreadX native packages.
+
+A TFT display is used to show the current status of the threads, including each uptime, status, and a dummy data. All threads communicates via queues and a simple semaphore is used to trigger the USB thread.
+
+![img](/resources/app_running.jpg)
 ## Hardware
 - [WeAct STM32H5 Core Board](https://github.com/WeActStudio/WeActStudio.STM32H5_64Pin_CoreBoard)
 - ST7789v SPI TFT Display
@@ -27,12 +31,12 @@ stateDiagram-v2
 
     fork_state --> USBThread
     state USBThread {
-        [*] --> initUSB
-        initUSB --> getTicks
-        getTicks --> printHello
-        printHello --> getRunTime
-        getRunTime --> sendQueueMessage
-        sendQueueMessage --> getTicks
+        [*] --> getTicks
+        getTicks --> waitForSemaphore
+        waitForSemaphore --> printCounterValue
+        printCounterValue --> getRunTime
+        getRunTime --> sendUSBXThreadMessage
+        sendUSBXThreadMessage --> getTicks
     }
 
     fork_state --> FileThread
@@ -48,10 +52,14 @@ stateDiagram-v2
 
     fork_state --> BlinkyThread
     state BlinkyThread {
-        [*] --> initGPIO
-        initGPIO --> toggleGPIO
-        toggleGPIO --> delay
+        [*] --> getStartTime
+        getStartTime --> toggleGPIO
+        toggleGPIO --> getCurrentTime
+        getCurrentTime --> sendBlikyThreadMessage
+        sendBlikyThreadMessage --> putSemaphore
+        putSemaphore --> delay
         delay --> toggleGPIO
+
 
     }
 ```

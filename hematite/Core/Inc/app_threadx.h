@@ -30,12 +30,30 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdint.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef enum {
+	DISPLAY_THREAD_ID,
+	BLINKY_THREAD_ID,
+	USB_THREAD_ID,
+	FS_THREAD_ID
+}threadEnum_t;
 
+typedef enum {
+	RUNNING,
+	HALTED,
+	FINISHED
+} threadStatus_t;
+
+typedef struct {
+	threadEnum_t thread_id;
+	threadStatus_t thread_status;
+	ULONG time;
+	uint8_t data;
+}hematiteQueueData_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

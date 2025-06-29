@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include "string.h"
+#include "app_threadx.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -166,15 +167,31 @@ VOID usbx_cdc_acm_write_thread_entry(ULONG thread_input)
 	UX_PARAMETER_NOT_USED(thread_input);
 	ULONG actual_length;
 	uint16_t counter = 0;
+	ULONG elapsedTime = 0, currentTime = 0;
+	hematiteQueueData_t qData = {0};
+
+	currentTime = tx_time_get();
+
+	/* Set the message ID */
+	qData.thread_id = USB_THREAD_ID;
+	qData.thread_status = RUNNING;
+
 	while (1)
 	{
 		sprintf(Tx_Buffer, "Counter @ %05d\r\n", counter);
-		/*wait for button press*/
+		/*wait for the blinky thread to release the semaphore*/
 		tx_semaphore_get(&semaphore, TX_WAIT_FOREVER);
 
 		/*transmit data*/
 		ux_device_class_cdc_acm_write(cdc_acm, (UCHAR *)(&Tx_Buffer), (strlen(Tx_Buffer)), &actual_length);
 //		tx_thread_sleep(300);
+		elapsedTime = tx_time_get() - currentTime;
+
+		qData.time = elapsedTime;
+		qData.data = counter;
+		/* Send the queue data to the system queue */
+		tx_queue_send(&system_queue, &qData, TX_WAIT_FOREVER);
+
 		counter++;
 	}
 
